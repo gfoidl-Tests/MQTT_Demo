@@ -3,12 +3,15 @@ using System.Text.Json;
 using MQTTnet;
 using MQTTnet.Client.Options;
 using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Protocol;
 
 ManagedMqttClientOptions options = new ManagedMqttClientOptionsBuilder()
     .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
     .WithClientOptions(new MqttClientOptionsBuilder()
-        .WithClientId("my-test-subscriber")
-        .WithTcpServer("localhost")
+        .WithClientId("gfoidl/my-test-subscriber")
+        //.WithTcpServer("localhost")
+        .WithTcpServer("broker.hivemq.com")
+        .WithCleanSession(false)
     )
     .Build();
 
@@ -32,7 +35,8 @@ mqttClient.UseApplicationMessageReceivedHandler(e =>
     }
 });
 
-await mqttClient.SubscribeAsync("test/#");
+await mqttClient.SubscribeAsync("gfoidl/test/#");
+await mqttClient.SubscribeAsync("gfoidl/test/time", MqttQualityOfServiceLevel.AtLeastOnce);
 await mqttClient.StartAsync(options);
 
 Console.WriteLine("Running...any key to stop.");

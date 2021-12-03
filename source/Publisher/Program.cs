@@ -13,13 +13,14 @@ MqttFactory factory = new();
 using IMqttClient mqttClient = factory.CreateMqttClient();
 
 var lastWillMessage = new MqttApplicationMessageBuilder()
-    .WithTopic("test/publisher/status")
+    .WithTopic("gfoidl/test/publisher/status")
     .WithPayload("offline")
     .Build();
 
 IMqttClientOptions options = new MqttClientOptionsBuilder()
-    .WithClientId("my-test-publisher")
-    .WithTcpServer("localhost")
+    .WithClientId("gfoidl/my-test-publisher")
+    //.WithTcpServer("localhost")
+    .WithTcpServer("broker.hivemq.com")
     .WithWillMessage(lastWillMessage)
     .Build();
 
@@ -87,9 +88,10 @@ async Task Run(CancellationToken cancellationToken)
         async Task PublishAsync()
         {
             var message = new MqttApplicationMessageBuilder()
-                .WithTopic("test/time")
+                .WithTopic("gfoidl/test/time")
                 .WithPayload(DateTimeOffset.UtcNow.ToString("O"))
                 //.WithRetainFlag(true)
+                .WithAtLeastOnceQoS()
                 .Build();
 
             MqttClientPublishResult publishResult = await mqttClient.PublishAsync(message, cancellationToken);
