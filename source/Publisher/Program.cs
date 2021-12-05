@@ -1,55 +1,36 @@
 using System.Text;
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Extensions.ManagedClient;
+using Publisher;
 
 Console.WriteLine("Waiting for broker / server to be up...any key to continue");
 Console.ReadKey();
 
 using CancellationTokenSource cts = new();
-MqttFactory factory = new();
-using IMqttClient mqttClient = factory.CreateMqttClient();
 
 var lastWillMessage = new MqttApplicationMessageBuilder()
     .WithTopic("test/publisher/status")
     .WithPayload("offline")
     .Build();
 
-IMqttClientOptions options = new MqttClientOptionsBuilder()
-    .WithClientId("my-test-publisher")
-    .WithTcpServer("localhost")
-    .WithWillMessage(lastWillMessage)
+ManagedMqttClientOptions options = new ManagedMqttClientOptionsBuilder()
+    .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
+    .WithClientOptions(new MqttClientOptionsBuilder()
+        .WithClientId("my-test-publisher")
+        .WithTcpServer("localhost")
+        .WithWillMessage(lastWillMessage)
+    )
+    .WithStorage(new StorageHandler())
     .Build();
 
-mqttClient.UseConnectedHandler(e =>
-{
-    Console.WriteLine("Connected");
-});
-
-mqttClient.UseDisconnectedHandler(async e =>
-{
-    if (cts.IsCancellationRequested) return;
-
-    Console.WriteLine("Disconnected from server");
-
-    await Task.Delay(TimeSpan.FromSeconds(5), cts.Token);
-
-    try
-    {
-        MqttClientConnectResult connectionResult = await mqttClient.ConnectAsync(options, cts.Token);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Reconnecting failed: {0}", ex);
-    }
-});
-
-MqttClientConnectResult connectionResult = await mqttClient.ConnectAsync(options, cts.Token);
+using IManagedMqttClient mqttClient = new MqttFactory().CreateManagedMqttClient();
 
 try
 {
+    await mqttClient.StartAsync(options);
     Task runTask = Run(cts.Token);
 
     Console.WriteLine("Running...hit Enter to stop");
@@ -57,7 +38,7 @@ try
     cts.Cancel();
 
     await runTask;
-    await mqttClient.DisconnectAsync();
+    await mqttClient.StopAsync();
 }
 catch (Exception ex)
 {
