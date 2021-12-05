@@ -23,9 +23,17 @@ IMqttClientOptions options = new MqttClientOptionsBuilder()
     .WithWillMessage(lastWillMessage)
     .Build();
 
+Task? runTask = null;
+bool isFirstRun = true;
+
 mqttClient.UseConnectedHandler(e =>
 {
     Console.WriteLine("Connected");
+
+    if (!isFirstRun)
+    {
+        runTask = Run(cts.Token);
+    }
 });
 
 mqttClient.UseDisconnectedHandler(async e =>
@@ -50,7 +58,8 @@ MqttClientConnectResult connectionResult = await mqttClient.ConnectAsync(options
 
 try
 {
-    Task runTask = Run(cts.Token);
+    isFirstRun = false;
+    runTask = Run(cts.Token);
 
     Console.WriteLine("Running...hit Enter to stop");
     Console.ReadLine();
