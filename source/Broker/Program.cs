@@ -1,3 +1,4 @@
+using Broker;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,8 +18,6 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
             // Instead of the StartUp we can use ConfigureServices like below.
             //webBuilder.UseStartup<Startup>();
 
-            webBuilder.Configure(_ => { });
-
             webBuilder.ConfigureServices(services =>
             {
                 services
@@ -28,5 +27,18 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
                     })
                     .AddMqttConnectionHandler()
                     .AddConnections();
+            });
+
+            webBuilder.Configure(app =>
+            {
+                app.UseMqttServer(mqtt =>
+                {
+                    ClientConnectionHandler clientConnectionHandler = new();
+                    mqtt.ClientConnectedHandler = clientConnectionHandler;
+                    mqtt.ClientDisconnectedHandler = clientConnectionHandler;
+
+                    // To handle last will
+                    mqtt.ApplicationMessageReceivedHandler = clientConnectionHandler;
+                });
             });
         });
