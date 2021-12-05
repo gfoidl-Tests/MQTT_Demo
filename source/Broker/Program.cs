@@ -25,6 +25,7 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
                     .AddHostedMqttServer(mqtt =>
                     {
                         mqtt.WithDefaultEndpoint();
+                        mqtt.WithPersistentSessions();  // https://github.com/chkr1011/MQTTnet/issues/546#issuecomment-462115119
                     })
                     .AddMqttConnectionHandler()
                     .AddConnections();

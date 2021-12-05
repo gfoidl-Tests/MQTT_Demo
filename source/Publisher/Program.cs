@@ -19,8 +19,8 @@ var lastWillMessage = new MqttApplicationMessageBuilder()
 
 IMqttClientOptions options = new MqttClientOptionsBuilder()
     .WithClientId("gfoidl/my-test-publisher")
-    //.WithTcpServer("localhost")
-    .WithTcpServer("broker.hivemq.com")
+    .WithTcpServer("localhost")
+    //.WithTcpServer("broker.hivemq.com")
     .WithWillMessage(lastWillMessage)
     .Build();
 
